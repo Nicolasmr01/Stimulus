@@ -44,20 +44,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: '#121212',
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 20,
+    color: '#fff',
   },
   card: {
-    backgroundColor: '#ececec',
+    backgroundColor: '#2c2c2c',
     padding: 20,
     marginVertical: 10,
     borderRadius: 10,
   },
   cardText: {
     fontSize: 18,
+    color: '#fff'
   },
 });

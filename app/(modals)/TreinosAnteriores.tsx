@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import {
-    FlatList,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  FlatList,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
+import { useAuth } from '../../contexts/AuthContext';
 
 type TreinoExercicio = {
   id: number;
@@ -33,32 +35,55 @@ type Treino = {
 };
 
 export default function TreinosAnteriores() {
+  const { memoryToken } = useAuth();
+
   const [treinos, setTreinos] = useState<Treino[]>([]);
   const [treinoSelecionado, setTreinoSelecionado] = useState<Treino | null>(null);
 
   useEffect(() => {
-    fetch('http://192.168.15.8:3333/api/treinos/1') // userId fixo
-      .then(res => res.json())
-      .then(setTreinos)
-      .catch(() => alert('Erro ao carregar treinos'));
-  }, []);
+    if (!memoryToken) return;
+
+    fetch('http://192.168.15.8:3333/api/treinos', {
+      headers: {
+        Authorization: `Bearer ${memoryToken}`,
+      },
+    })
+      .then(res => {
+        if (!res.ok) throw new Error(`Status: ${res.status}`);
+        return res.json();
+      })
+      .then(data => setTreinos(data))
+      .catch(() => {
+        Alert.alert('Erro', 'Erro ao carregar treinos');
+      });
+  }, [memoryToken]);
+
+  const cardStyle = {
+    backgroundColor: '#cccccc',
+    padding: 10,
+    marginBottom: 8,
+    borderRadius: 6,
+  };
+
+  const textStyle = { color: '#fff' };
 
   if (treinoSelecionado) {
     return (
-      <ScrollView style={{ padding: 20 }}>
+      <ScrollView style={{ padding: 20, backgroundColor: '#121212' }}>
         <TouchableOpacity onPress={() => setTreinoSelecionado(null)} style={{ marginBottom: 20 }}>
-          <Text style={{ color: 'blue' }}>← Voltar</Text>
+          <Text style={{ color: '#007bff' }}>← Voltar</Text>
         </TouchableOpacity>
 
-        <Text style={{ fontSize: 22, fontWeight: 'bold' }}>{treinoSelecionado.titulo}</Text>
-        <Text style={{ marginBottom: 10 }}>{new Date(treinoSelecionado.data).toLocaleDateString()}</Text>
+        <Text style={[{ fontSize: 22, fontWeight: 'bold' }, textStyle]}>
+          {treinoSelecionado.titulo}
+        </Text>
+        <Text style={[{ marginBottom: 10 }, textStyle]}>
+          {new Date(treinoSelecionado.data).toLocaleDateString()}
+        </Text>
 
-        <Text style={{ fontWeight: 'bold', marginBottom: 5 }}>Exercícios:</Text>
+        <Text style={[{ fontWeight: 'bold', marginBottom: 5 }, textStyle]}>Exercícios:</Text>
         {treinoSelecionado.exercicios.map(ex => (
-          <View
-            key={ex.id}
-            style={{ backgroundColor: '#eee', padding: 10, marginBottom: 8, borderRadius: 6 }}
-          >
+          <View key={ex.id} style={cardStyle}>
             <Text style={{ fontWeight: 'bold' }}>{ex.exercise.name}</Text>
             <Text>Séries: {ex.series}</Text>
             <Text>Carga: {ex.carga} kg</Text>
@@ -66,18 +91,15 @@ export default function TreinosAnteriores() {
           </View>
         ))}
 
-        <Text style={{ fontWeight: 'bold', marginTop: 15 }}>Anotações:</Text>
+        <Text style={[{ fontWeight: 'bold', marginTop: 15 }, textStyle]}>Anotações:</Text>
         {treinoSelecionado.notes.length > 0 ? (
           treinoSelecionado.notes.map(note => (
-            <View
-              key={note.id}
-              style={{ backgroundColor: '#f7f7f7', padding: 10, marginBottom: 8, borderRadius: 6 }}
-            >
+            <View key={note.id} style={cardStyle}>
               <Text>{note.content}</Text>
             </View>
           ))
         ) : (
-          <Text style={{ fontStyle: 'italic' }}>Nenhuma anotação</Text>
+          <Text style={[{ fontStyle: 'italic' }, textStyle]}>Nenhuma anotação</Text>
         )}
       </ScrollView>
     );
@@ -85,14 +107,14 @@ export default function TreinosAnteriores() {
 
   return (
     <FlatList
-      style={{ padding: 20 }}
+      style={{ padding: 20, backgroundColor: '#121212', paddingTop: 100 }} 
       data={treinos}
       keyExtractor={item => item.id.toString()}
       renderItem={({ item }) => (
         <TouchableOpacity
           onPress={() => setTreinoSelecionado(item)}
           style={{
-            backgroundColor: '#eee',
+            backgroundColor: '#cccccc',
             padding: 15,
             marginBottom: 10,
             borderRadius: 8,

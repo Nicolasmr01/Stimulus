@@ -1,12 +1,14 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Button, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState(false);
   const router = useRouter();
+  const { setMemoryToken, savePersistentToken } = useAuth();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -27,7 +29,14 @@ export default function LoginScreen() {
       }
 
       const data = await response.json();
-      // Aqui você pode salvar token, user data etc se quiser
+
+      if (!data.token) {
+        Alert.alert('Erro', 'Token não recebido');
+        return;
+      }
+
+      await savePersistentToken(data.token);
+      setMemoryToken(data.token);
 
       setLoginError(false);
       router.replace('/(tabs)/home');
@@ -41,6 +50,7 @@ export default function LoginScreen() {
     <View style={styles.container}>
       <TextInput
         placeholder="Email"
+        placeholderTextColor="#888"
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
@@ -49,16 +59,19 @@ export default function LoginScreen() {
       />
       <TextInput
         placeholder="Senha"
+        placeholderTextColor="#888"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
         style={styles.input}
       />
-      <Button title="Entrar" onPress={handleLogin} />
+      <TouchableOpacity style={styles.button} onPress={handleLogin}>
+        <Text style={styles.buttonText}>Entrar</Text>
+      </TouchableOpacity>
 
       {loginError && (
         <View style={styles.registerPrompt}>
-          <Text style={{ marginRight: 6 }}>Usuário ou senha inválidos.</Text>
+          <Text style={{ color: '#fff', marginRight: 6 }}>Usuário ou senha inválidos.</Text>
           <TouchableOpacity onPress={() => router.push('/register')}>
             <Text style={styles.registerLink}>Registrar-se</Text>
           </TouchableOpacity>
@@ -69,22 +82,40 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, justifyContent: 'center' },
+  container: {
+    flex: 1,
+    padding: 20,
+    justifyContent: 'center',
+    backgroundColor: '#121212',
+  },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#ccc',
+    backgroundColor: '#1e1e1e',
+    color: '#fff',
     padding: 12,
     marginBottom: 12,
     borderRadius: 6,
   },
+  button: {
+    backgroundColor: '#007bff',
+    padding: 14,
+    borderRadius: 6,
+    marginTop: 10,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    textAlign: 'center',
+  },
   registerPrompt: {
     flexDirection: 'row',
-    marginTop: 10,
+    marginTop: 16,
     justifyContent: 'center',
     alignItems: 'center',
   },
   registerLink: {
-    color: 'blue',
+    color: '#4da6ff',
     textDecorationLine: 'underline',
   },
 });
