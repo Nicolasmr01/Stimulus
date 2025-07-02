@@ -1,0 +1,63 @@
+import { useRouter } from 'expo-router';
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+export default function TreinosScreen() {
+  const router = useRouter();
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Treinos</Text>
+
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => router.push('/TreinosAnteriores')}
+      >
+        <Text style={styles.cardText}>Visualizar treinos anteriores</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => router.push('/RegistrarTreino')}
+      >
+        <Text style={styles.cardText}>Registrar novo treino</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => router.push('/Anotacoes')}
+      >
+        <Text style={styles.cardText}>Anotações</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => alert('Gráficos ainda não implementados')}
+      >
+        <Text style={styles.cardText}>Gráficos</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#fff',
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  card: {
+    backgroundColor: '#ececec',
+    padding: 20,
+    marginVertical: 10,
+    borderRadius: 10,
+  },
+  cardText: {
+    fontSize: 18,
+  },
+});
