@@ -9,16 +9,23 @@ import {
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 
+type SerieDetalhe = {
+  id: number;
+  treinoExercicioId: number;
+  tipoSerie: string;
+  carga: number;
+  reps: number;
+};
+
 type TreinoExercicio = {
   id: number;
-  series: number;
   carga: number;
-  tipoSerie: string;
   exercise: {
     id: number;
     name: string;
     photoUrl?: string;
   };
+  seriesDetalhes: SerieDetalhe[];  // array de séries detalhadas
 };
 
 type Note = {
@@ -59,7 +66,7 @@ export default function TreinosAnteriores() {
   }, [memoryToken]);
 
   const cardStyle = {
-    backgroundColor: '#cccccc',
+    backgroundColor: '#333333',
     padding: 10,
     marginBottom: 8,
     borderRadius: 6,
@@ -70,7 +77,10 @@ export default function TreinosAnteriores() {
   if (treinoSelecionado) {
     return (
       <ScrollView style={{ padding: 20, backgroundColor: '#121212' }}>
-        <TouchableOpacity onPress={() => setTreinoSelecionado(null)} style={{ marginBottom: 20 }}>
+        <TouchableOpacity
+          onPress={() => setTreinoSelecionado(null)}
+          style={{ marginBottom: 20 }}
+        >
           <Text style={{ color: '#007bff' }}>← Voltar</Text>
         </TouchableOpacity>
 
@@ -81,47 +91,68 @@ export default function TreinosAnteriores() {
           {new Date(treinoSelecionado.data).toLocaleDateString()}
         </Text>
 
-        <Text style={[{ fontWeight: 'bold', marginBottom: 5 }, textStyle]}>Exercícios:</Text>
+        <Text style={[{ fontWeight: 'bold', marginBottom: 5 }, textStyle]}>
+          Exercícios:
+        </Text>
         {treinoSelecionado.exercicios.map(ex => (
           <View key={ex.id} style={cardStyle}>
-            <Text style={{ fontWeight: 'bold' }}>{ex.exercise.name}</Text>
-            <Text>Séries: {ex.series}</Text>
-            <Text>Carga: {ex.carga} kg</Text>
-            <Text>Tipo: {ex.tipoSerie}</Text>
+            <Text style={{ fontWeight: 'bold', color: '#fff' }}>
+              {ex.exercise.name}
+            </Text>
+            <Text style={{ color: '#fff' }}>Carga total: {ex.carga} kg</Text>
+
+            <Text style={{ fontWeight: 'bold', marginTop: 6, color: '#fff' }}>
+              Séries Detalhadas:
+            </Text>
+            {ex.seriesDetalhes && ex.seriesDetalhes.length > 0 ? (
+              ex.seriesDetalhes.map(sd => (
+                <View
+                  key={sd.id}
+                  style={{
+                    marginLeft: 10,
+                    marginBottom: 4,
+                    backgroundColor: '#222',
+                    padding: 6,
+                    borderRadius: 4,
+                  }}
+                >
+                  <Text style={{ color: '#ddd' }}>Tipo: {sd.tipoSerie}</Text>
+                  <Text style={{ color: '#ddd' }}>Carga: {sd.carga} kg</Text>
+                  <Text style={{ color: '#ddd' }}>Repetições: {sd.reps}</Text>
+                </View>
+              ))
+            ) : (
+              <Text style={{ fontStyle: 'italic', color: '#ccc' }}>
+                Nenhuma série detalhada.
+              </Text>
+            )}
           </View>
         ))}
-
-        <Text style={[{ fontWeight: 'bold', marginTop: 15 }, textStyle]}>Anotações:</Text>
-        {treinoSelecionado.notes.length > 0 ? (
-          treinoSelecionado.notes.map(note => (
-            <View key={note.id} style={cardStyle}>
-              <Text>{note.content}</Text>
-            </View>
-          ))
-        ) : (
-          <Text style={[{ fontStyle: 'italic' }, textStyle]}>Nenhuma anotação</Text>
-        )}
       </ScrollView>
     );
   }
 
   return (
     <FlatList
-      style={{ padding: 20, backgroundColor: '#121212', paddingTop: 100 }} 
+      style={{ padding: 20, backgroundColor: '#121212', paddingTop: 100 }}
       data={treinos}
       keyExtractor={item => item.id.toString()}
       renderItem={({ item }) => (
         <TouchableOpacity
           onPress={() => setTreinoSelecionado(item)}
           style={{
-            backgroundColor: '#cccccc',
+            backgroundColor: '#333333',
             padding: 15,
             marginBottom: 10,
             borderRadius: 8,
           }}
         >
-          <Text style={{ fontWeight: 'bold', fontSize: 16 }}>{item.titulo}</Text>
-          <Text>{new Date(item.data).toLocaleDateString()}</Text>
+          <Text style={{ fontWeight: 'bold', fontSize: 16, color: '#fff' }}>
+            {item.titulo}
+          </Text>
+          <Text style={{ color: '#fff' }}>
+            {new Date(item.data).toLocaleDateString()}
+          </Text>
         </TouchableOpacity>
       )}
     />

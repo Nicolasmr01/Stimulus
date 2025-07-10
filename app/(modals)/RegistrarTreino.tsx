@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Alert,
-  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -11,21 +10,23 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useAuth } from '../../contexts/AuthContext';
 
-type Exercise = {
-  id: number;
-  name: string;
-  photoUrl?: string;
+import { useAuth } from '../../contexts/AuthContext';
+import AdicionarExercicio, { Exercise } from './AdicionarExercicio';
+
+// Tipos...
+export type SerieDetalhe = {
+  tipoSerie: 'aquecimento' | 'pap' | 'validas';
+  carga: number;
+  reps: number;
 };
 
-type ExercicioInput = {
+export type ExercicioSelecionado = {
   exerciseId: number;
-  series: number;
-  carga: number;
-  tipoSerie: 'aquecimento' | 'pap' | 'validas';
   name?: string;
   photoUrl?: string;
+  carga: number;
+  seriesDetalhes: SerieDetalhe[];
 };
 
 export default function RegistrarTreino() {
@@ -33,72 +34,32 @@ export default function RegistrarTreino() {
 
   const [titulo, setTitulo] = useState('');
   const [data, setData] = useState('');
-  const [exercicios, setExercicios] = useState<ExercicioInput[]>([]);
-  const [exercisesList, setExercisesList] = useState<Exercise[]>([]);
+  const [exercicios, setExercicios] = useState<ExercicioSelecionado[]>([]);
   const [descanso, setDescanso] = useState('');
   const [alimentacao, setAlimentacao] = useState('');
   const [humor, setHumor] = useState('');
   const [esforco, setEsforco] = useState('');
   const [observacoes, setObservacoes] = useState('');
-
-  useEffect(() => {
-    if (!memoryToken) return;
-
-    fetch('http://192.168.15.8:3333/api/exercicios', {
-      headers: {
-        Authorization: `Bearer ${memoryToken}`,
-      },
-    })
-      .then(res => res.json())
-      .then(data => {
-        console.log('exercisesList API:', data);
-        setExercisesList(Array.isArray(data) ? data : []);
-      })
-      .catch(() => Alert.alert('Erro', 'Não foi possível carregar os exercícios.'));
-  }, [memoryToken]);
+  const [modalEscolherExercicioVisivel, setModalEscolherExercicioVisivel] = useState(false);
 
   const validarData = (dataStr: string) => {
     const dataObj = new Date(dataStr);
     return !isNaN(dataObj.getTime());
   };
 
-  const adicionarExercicio = (ex: Exercise) => {
-    if (exercicios.some(e => e.exerciseId === ex.id)) {
-      Alert.alert('Atenção', 'Exercício já adicionado');
-      return;
-    }
-    setExercicios([
-      ...exercicios,
-      {
+  const adicionarExerciciosSelecionados = (exerciciosSelecionados: Exercise[]) => {
+    const novosExercicios: ExercicioSelecionado[] = exerciciosSelecionados
+      .filter((ex) => !exercicios.some((e) => e.exerciseId === ex.id))
+      .map(ex => ({
         exerciseId: ex.id,
-        series: 1,
-        carga: 0,
-        tipoSerie: 'validas',
         name: ex.name,
         photoUrl: ex.photoUrl,
-      },
-    ]);
-  };
+        carga: 0,
+        seriesDetalhes: [],
+      }));
 
-  const atualizarExercicio = (index: number, campo: keyof ExercicioInput, valor: any) => {
-    const novos = [...exercicios];
-    novos[index] = { ...novos[index], [campo]: valor };
-    setExercicios(novos);
-  };
-
-  const removerExercicio = (index: number) => {
-    Alert.alert('Remover exercício', 'Tem certeza que deseja remover este exercício?', [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Remover',
-        style: 'destructive',
-        onPress: () => {
-          const novaLista = [...exercicios];
-          novaLista.splice(index, 1);
-          setExercicios(novaLista);
-        },
-      },
-    ]);
+    setExercicios(prev => [...prev, ...novosExercicios]);
+    setModalEscolherExercicioVisivel(false);
   };
 
   const enviarTreino = async () => {
@@ -106,63 +67,56 @@ export default function RegistrarTreino() {
       Alert.alert('Erro', 'Título e data são obrigatórios');
       return;
     }
-
     if (!validarData(data)) {
       Alert.alert('Erro', 'Data inválida. Use o formato AAAA-MM-DD');
       return;
     }
 
-    if (!memoryToken) {
-      Alert.alert('Erro', 'Usuário não autenticado.');
-      return;
-    }
-
     try {
-      const body = {
-        titulo,
-        data: new Date(data).toISOString(),
-        exercicios: exercicios.map(({ exerciseId, series, carga, tipoSerie }) => ({
-          exerciseId,
-          series,
-          carga,
-          tipoSerie,
-        })),
-        descanso: descanso ? Number(descanso) : undefined,
-        alimentacao: alimentacao ? Number(alimentacao) : undefined,
-        humor: humor ? Number(humor) : undefined,
-        esforco: esforco ? Number(esforco) : undefined,
-        observacoes,
-      };
-
-      console.log('Enviando treino:', body);
-
       const response = await fetch('http://192.168.15.8:3333/api/treinos', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${memoryToken}`,
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          titulo,
+          data,
+          descanso: descanso ? Number(descanso) : undefined,
+          alimentacao: alimentacao ? Number(alimentacao) : undefined,
+          humor: humor ? Number(humor) : undefined,
+          esforco: esforco ? Number(esforco) : undefined,
+          observacoes,
+          exercicios: exercicios.map(ex => ({
+            exerciseId: ex.exerciseId,
+            carga: ex.carga,
+            seriesDetalhes: ex.seriesDetalhes.map(serie => ({
+              tipoSerie: serie.tipoSerie,
+              carga: serie.carga,
+              reps: serie.reps,
+            })),
+          })),
+        }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        Alert.alert('Erro', errorData.error || 'Erro desconhecido ao salvar treino');
+        const err = await response.json();
+        Alert.alert('Erro', err.error || 'Erro ao salvar treino');
         return;
       }
 
-      Alert.alert('Sucesso', 'Treino registrado com sucesso!');
-      setExercicios([]);
+      Alert.alert('Sucesso', `Treino "${titulo}" salvo com sucesso!`);
       setTitulo('');
       setData('');
+      setExercicios([]);
       setDescanso('');
       setAlimentacao('');
       setHumor('');
       setEsforco('');
       setObservacoes('');
-    } catch (error) {
-      console.error('Erro no envio:', error);
-      Alert.alert('Erro', 'Falha ao registrar treino');
+    } catch (error: any) {
+      console.log('Erro detalhado:', error);
+      Alert.alert('Erro', `Erro ao conectar com o servidor: ${error.message || error}`);
     }
   };
 
@@ -191,73 +145,110 @@ export default function RegistrarTreino() {
           placeholderTextColor="#888"
         />
 
-        <Text style={styles.subTitle}>Escolher Exercício</Text>
-        <View style={styles.exList}>
-          {Array.isArray(exercisesList) &&
-            exercisesList.map(ex => (
-              <TouchableOpacity
-                key={ex.id}
-                style={styles.exCard}
-                onPress={() => adicionarExercicio(ex)}
-              >
-                {ex.photoUrl && <Image source={{ uri: ex.photoUrl }} style={styles.exImage} />}
-                <Text style={{ textAlign: 'center', color: '#fff' }}>{ex.name}</Text>
-              </TouchableOpacity>
-            ))}
-        </View>
+        <TouchableOpacity
+          style={styles.btnAdicionarExercicio}
+          onPress={() => setModalEscolherExercicioVisivel(true)}
+        >
+          <Text style={styles.btnAdicionarExercicioText}>+ Adicionar Exercício</Text>
+        </TouchableOpacity>
 
         <Text style={styles.subTitle}>Exercícios Selecionados</Text>
+        {exercicios.length === 0 && (
+          <Text style={{ color: '#ccc', fontStyle: 'italic' }}>Nenhum exercício selecionado.</Text>
+        )}
+
         {exercicios.map((ex, idx) => (
-          <View key={idx} style={styles.exercicioContainer}>
-            <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
+          <View key={ex.exerciseId} style={styles.exercicioContainer}>
+            <Text style={{ fontWeight: 'bold', color: '#fff', fontSize: 16 }}>
+              {ex.name ?? ''}
+            </Text>
+
+            <Text style={[styles.labelPequeno, { marginTop: 8 }]}>Carga do Exercício</Text>
+            <TextInput
+              style={styles.input}
+              keyboardType="numeric"
+              value={ex.carga !== undefined ? String(ex.carga) : ''}
+              onChangeText={text => {
+                const newExercicios = [...exercicios];
+                newExercicios[idx].carga = Number(text) || 0;
+                setExercicios(newExercicios);
+              }}
+              placeholder="Carga do exercício"
+              placeholderTextColor="#999"
+            />
+
+            {ex.seriesDetalhes.length === 0 ? (
+              <Text style={{ color: '#ccc', fontStyle: 'italic', marginTop: 8 }}>
+                Nenhuma série adicionada.
+              </Text>
+            ) : (
+              ex.seriesDetalhes.map((serie, sidx) => (
+                <View key={sidx} style={styles.serieContainer}>
+                  <Text style={styles.labelPequeno}>Tipo de Série</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={serie.tipoSerie ?? ''}
+                    onChangeText={text => {
+                      const newExercicios = [...exercicios];
+                      newExercicios[idx].seriesDetalhes[sidx].tipoSerie =
+                        text as 'aquecimento' | 'pap' | 'validas';
+                      setExercicios(newExercicios);
+                    }}
+                    placeholder="aquecimento, pap ou validas"
+                    placeholderTextColor="#999"
+                  />
+
+                  <Text style={[styles.labelPequeno, { marginTop: 8 }]}>Carga</Text>
+                  <TextInput
+                    style={styles.input}
+                    keyboardType="numeric"
+                    value={serie.carga !== undefined ? String(serie.carga) : ''}
+                    onChangeText={text => {
+                      const newExercicios = [...exercicios];
+                      newExercicios[idx].seriesDetalhes[sidx].carga = Number(text) || 0;
+                      setExercicios(newExercicios);
+                    }}
+                    placeholder="Carga"
+                    placeholderTextColor="#999"
+                  />
+
+                  <Text style={[styles.labelPequeno, { marginTop: 8 }]}>Repetições</Text>
+                  <TextInput
+                    style={styles.input}
+                    keyboardType="numeric"
+                    value={serie.reps !== undefined ? String(serie.reps) : ''}
+                    onChangeText={text => {
+                      const newExercicios = [...exercicios];
+                      newExercicios[idx].seriesDetalhes[sidx].reps = Number(text) || 0;
+                      setExercicios(newExercicios);
+                    }}
+                    placeholder="Repetições"
+                    placeholderTextColor="#999"
+                  />
+                </View>
+              ))
+            )}
+
+            <TouchableOpacity
+              style={[styles.btnAdicionarExercicio, { marginTop: 10, backgroundColor: '#28a745' }]}
+              onPress={() => {
+                const newExercicios = [...exercicios];
+                newExercicios[idx].seriesDetalhes.push({
+                  tipoSerie: 'aquecimento',
+                  carga: 0,
+                  reps: 0,
+                });
+                setExercicios(newExercicios);
               }}
             >
-              <Text style={{ fontWeight: 'bold', color: '#fff' }}>{ex.name}</Text>
-              <TouchableOpacity onPress={() => removerExercicio(idx)}>
-                <Text style={{ color: 'red', fontSize: 18 }}>❌</Text>
-              </TouchableOpacity>
-            </View>
-
-            <TextInput
-              style={styles.input}
-              placeholder="Séries"
-              keyboardType="numeric"
-              value={ex.series.toString()}
-              onChangeText={text => atualizarExercicio(idx, 'series', Number(text) || 0)}
-              placeholderTextColor="#888"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Carga (kg)"
-              keyboardType="numeric"
-              value={ex.carga.toString()}
-              onChangeText={text => atualizarExercicio(idx, 'carga', Number(text) || 0)}
-              placeholderTextColor="#888"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Tipo de série (aquecimento, pap, validas)"
-              value={ex.tipoSerie}
-              onChangeText={text =>
-                atualizarExercicio(
-                  idx,
-                  'tipoSerie',
-                  ['aquecimento', 'pap', 'validas'].includes(text)
-                    ? (text as ExercicioInput['tipoSerie'])
-                    : 'validas'
-                )
-              }
-              placeholderTextColor="#888"
-            />
+              <Text style={[styles.btnAdicionarExercicioText, { color: '#fff' }]}>
+                + Adicionar Série
+              </Text>
+            </TouchableOpacity>
           </View>
         ))}
 
         <Text style={styles.subTitle}>Anotações finais</Text>
-
         <TextInput
           style={styles.input}
           placeholder="Descanso (1-10)"
@@ -266,7 +257,6 @@ export default function RegistrarTreino() {
           onChangeText={setDescanso}
           placeholderTextColor="#888"
         />
-
         <TextInput
           style={styles.input}
           placeholder="Alimentação (1-10)"
@@ -275,7 +265,6 @@ export default function RegistrarTreino() {
           onChangeText={setAlimentacao}
           placeholderTextColor="#888"
         />
-
         <TextInput
           style={styles.input}
           placeholder="Humor (1-10)"
@@ -284,7 +273,6 @@ export default function RegistrarTreino() {
           onChangeText={setHumor}
           placeholderTextColor="#888"
         />
-
         <TextInput
           style={styles.input}
           placeholder="Esforço entre as séries (1-10)"
@@ -293,7 +281,6 @@ export default function RegistrarTreino() {
           onChangeText={setEsforco}
           placeholderTextColor="#888"
         />
-
         <TextInput
           style={[styles.input, { height: 80 }]}
           placeholder="Anotações extras"
@@ -307,6 +294,15 @@ export default function RegistrarTreino() {
           <Text style={styles.btnSubmitText}>Salvar treino</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {modalEscolherExercicioVisivel && (
+        <View style={styles.modalWrapper}>
+          <AdicionarExercicio
+            onVoltar={() => setModalEscolherExercicioVisivel(false)}
+            onAdicionarExercicios={adicionarExerciciosSelecionados}
+          />
+        </View>
+      )}
     </KeyboardAvoidingView>
   );
 }
@@ -322,6 +318,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginTop: 10,
     color: '#fff',
+  },
+  labelPequeno: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 14,
   },
   input: {
     backgroundColor: '#1e1e1e',
@@ -345,6 +346,12 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderRadius: 6,
   },
+  serieContainer: {
+    backgroundColor: '#222',
+    padding: 10,
+    borderRadius: 6,
+    marginTop: 10,
+  },
   btnSubmit: {
     backgroundColor: '#28a745',
     padding: 15,
@@ -357,24 +364,22 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 18,
   },
-  exList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    marginBottom: 16,
-  },
-  exCard: {
-    backgroundColor: '#2c2c2c',
-    borderRadius: 8,
+  btnAdicionarExercicio: {
+    backgroundColor: '#007bff',
     padding: 10,
     alignItems: 'center',
-    width: 100,
-    margin: 4,
-  },
-  exImage: {
-    width: 60,
-    height: 60,
-    marginBottom: 5,
     borderRadius: 6,
+    marginTop: 16,
+  },
+  btnAdicionarExercicioText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  modalWrapper: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    zIndex: 999,
   },
 });

@@ -8,7 +8,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState(false);
   const router = useRouter();
-  const { setMemoryToken, savePersistentToken } = useAuth();
+  const { setMemoryToken, savePersistentToken, clearPersistentToken } = useAuth();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -35,6 +35,8 @@ export default function LoginScreen() {
         return;
       }
 
+
+      await clearPersistentToken(); // 🔥 limpa token anterior
       await savePersistentToken(data.token);
       setMemoryToken(data.token);
 
