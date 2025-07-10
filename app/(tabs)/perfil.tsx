@@ -95,10 +95,10 @@ export default function PerfilScreen() {
         {fotoUri ? (
           <Image source={{ uri: fotoUri }} style={styles.fotoPerfil} />
         ) : (
-          <View style={[styles.fotoPerfil, styles.fotoPlaceholder]}>
-            <Icon name="user" size={60} color="#aaa" />
-            <Text style={{ color: '#aaa' }}>Adicionar foto</Text>
-          </View>
+          <Image
+            source={{ uri: 'https://saladeimprensa.com.br/images/noticias/1763/5f665324a3a9bc93228b63cf8219aa04.webp' }}
+            style={styles.fotoPerfil}
+          />
         )}
       </TouchableOpacity>
 
@@ -168,13 +168,18 @@ export default function PerfilScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, alignItems: 'center' },
+  container: {
+    flex: 1,
+    padding: 20,
+    alignItems: 'center',
+    backgroundColor: '#121212', // fundo escuro
+  },
   fotoPerfil: {
     width: 120,
     height: 120,
     borderRadius: 60,
     marginBottom: 20,
-    backgroundColor: '#ddd',
+    backgroundColor: '#333333', // fundo escuro para a foto
   },
   fotoPlaceholder: {
     justifyContent: 'center',
@@ -187,20 +192,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 18,
     borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
+    borderBottomColor: '#444', // borda escura
     paddingBottom: 4,
   },
   texto: {
     fontSize: 18,
-    color: '#333',
+    color: '#fff', // texto branco
     flex: 1,
   },
   input: {
     flex: 1,
     fontSize: 18,
     borderBottomWidth: 1,
-    borderBottomColor: '#666',
+    borderBottomColor: '#007bff', // borda azul para input ativo
     paddingVertical: 2,
-    color: '#000',
+    color: '#fff', // texto input branco
+  },
+  iconEdit: {
+    color: '#007bff', // azul ícone editar
   },
 });
