@@ -17,8 +17,8 @@ export default function Home() {
         <Text style={styles.buttonText}>Visualizar Treinos</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.button} onPress={() => router.push('/(tabs)/grafico')}>
-        <Text style={styles.buttonText}>Visualizar Gráfico</Text>
+      <TouchableOpacity style={styles.button} onPress={() => router.push('/chatbot')}>
+        <Text style={styles.buttonText}>ChatBot</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.button} onPress={() => router.push('/Anotacoes')}>

@@ -18,7 +18,7 @@ export default function TreinosScreen() {
 
       <TouchableOpacity
         style={styles.card}
-        onPress={() => router.push('/RegistrarTreino')}
+        onPress={() => router.push('/(modals)/RegistrarTreino')}
       >
         <Text style={styles.cardText}>Registrar novo treino</Text>
       </TouchableOpacity>
@@ -32,9 +32,9 @@ export default function TreinosScreen() {
 
       <TouchableOpacity
         style={styles.card}
-        onPress={() => alert('Gráficos ainda não implementados')}
+        onPress={() => router.push('/chatbot')}
       >
-        <Text style={styles.cardText}>Gráficos</Text>
+        <Text style={styles.cardText}>Chatbot</Text>
       </TouchableOpacity>
     </View>
   );
@@ -45,6 +45,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: '#121212',
+    paddingTop: 50
   },
   title: {
     fontSize: 28,

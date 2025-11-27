@@ -1,9 +1,18 @@
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useAuth } from '../contexts/AuthContext'; // Importando contexto de autenticação
 
 export default function StartScreen() {
   const router = useRouter();
+  const { memoryToken } = useAuth(); // Pegando o token de memória do contexto de autenticação
+
+  // Verifica se o usuário já está autenticado, se sim, redireciona para a tela principal
+  useEffect(() => {
+    if (memoryToken) {
+      router.replace('/perfil'); // Redireciona para a tela de perfil caso esteja logado
+    }
+  }, [memoryToken, router]);
 
   return (
     <View style={styles.container}>

@@ -4,7 +4,7 @@ type User = {
   id: string;
   nome: string;
   email: string;
-  // outras infos que quiser adicionar
+   phone?: string;
 };
 
 type UserContextType = {

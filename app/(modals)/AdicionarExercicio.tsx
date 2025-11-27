@@ -217,7 +217,7 @@ export default function EscolherExercicio({ onVoltar, onAdicionarExercicios }: P
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: '#fff' },
+  container: { flex: 1, padding: 16, paddingTop:50, paddingBottom:50, backgroundColor: '#fff' },
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
   title: { fontSize: 20, fontWeight: 'bold', marginLeft: 12 },
   buscaContainer: {

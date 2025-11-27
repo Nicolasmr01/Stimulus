@@ -1,37 +1,61 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useAuth } from '../contexts/AuthContext';
+
+const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+=?])[A-Za-z0-9!@#$%^&*()_+=?]{6,15}$/;
 
 export default function RegisterScreen() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  const [fieldError, setFieldError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+
   const router = useRouter();
+  const { login } = useAuth(); 
 
   const handleRegister = async () => {
+    setFieldError('');
+    setPasswordError('');
+
     if (!name || !email || !password) {
-      Alert.alert('Erro', 'Preencha todos os campos');
+      setFieldError('Preencha todos os campos');
+      return;
+    }
+
+     // Validação da senha no FRONT
+    if (!passwordRegex.test(password)) {
+      setPasswordError(
+        'A senha deve ter 6–15 caracteres, 1 letra maiúscula, 1 número e 1 caractere especial.'
+      );
       return;
     }
 
     try {
+      // Faz o registro no servidor
       const response = await fetch('http://192.168.15.8:3333/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const error = await response.json();
-        Alert.alert('Erro', error.error || 'Erro ao registrar');
+        setFieldError(data.error || 'Erro ao registrar');
         return;
       }
 
-      Alert.alert('Sucesso', 'Usuário registrado!');
+      // Após registrar, já loga automaticamente usando a função login do contexto
+      await login(email, password);
+
       router.replace('/(tabs)/home');
+
     } catch (error) {
       console.error(error);
-      Alert.alert('Erro', 'Não foi possível conectar ao servidor');
+      setFieldError('Não foi possível conectar ao servidor');
     }
   };
 
@@ -41,14 +65,22 @@ export default function RegisterScreen() {
         placeholder="Nome"
         placeholderTextColor="#888"
         value={name}
-        onChangeText={setName}
+        onChangeText={(t) => {
+          setName(t);
+          setFieldError('');
+          setPasswordError('');
+        }}
         style={styles.input}
       />
       <TextInput
         placeholder="Email"
         placeholderTextColor="#888"
         value={email}
-        onChangeText={setEmail}
+        onChangeText={(t) => {
+          setEmail(t);
+          setFieldError('');
+          setPasswordError('');
+        }}
         keyboardType="email-address"
         autoCapitalize="none"
         style={styles.input}
@@ -57,13 +89,31 @@ export default function RegisterScreen() {
         placeholder="Senha"
         placeholderTextColor="#888"
         value={password}
-        onChangeText={setPassword}
+         onChangeText={(t) => {
+          setPassword(t);
+          setPasswordError('');
+          setFieldError('');
+        }}
         secureTextEntry
         style={styles.input}
       />
       <TouchableOpacity style={styles.button} onPress={handleRegister}>
         <Text style={styles.buttonText}>Registrar</Text>
       </TouchableOpacity>
+
+       {/* EXIBIR ERROS COMO NO LOGIN */}
+      {fieldError !== '' && (
+        <Text style={{ color: 'red', textAlign: 'center', marginTop: 10 }}>
+          {fieldError}
+        </Text>
+      )}
+
+      {passwordError !== '' && (
+        <Text style={{ color: 'red', textAlign: 'center', marginTop: 10 }}>
+          {passwordError}
+        </Text>
+      )}
+
     </View>
   );
 }

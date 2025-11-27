@@ -8,58 +8,87 @@ datasource db {
 }
 
 model User {
-  id       Int      @id @default(autoincrement())
-  name     String
-  email    String   @unique
-  password String
-  treinos  Treino[]
+  id           Int           @id @default(autoincrement())
+  name         String
+  email        String        @unique
+  password     String
+  photoUrl     String?
+  nivel        Int           @default(1)
+  pontos       Int           @default(0)
+  Medalha      Medalha[]
+  treinos      Treino[]
+  gamificacoes Gamificacao[]
 }
 
 model Treino {
-  id          Int               @id @default(autoincrement())
-  titulo      String
-  data        DateTime
-  user        User              @relation(fields: [userId], references: [id])
-  userId      Int
-  exercicios  TreinoExercicio[]
-  descanso    Int? // 1-10, opcional
-  alimentacao Int? // 1-10, opcional
-  humor       Int? // 1-10, opcional
-  esforco     Int? // 1-10, opcional (esforço entre séries)
-  observacoes String? // Anotações extras, opcional
-  notes       Note[] // Notas gerais associadas ao treino
+  id              Int               @id @default(autoincrement())
+  titulo          String
+  data            DateTime
+  userId          Int
+  descanso        Int?
+  alimentacao     Int?
+  humor           Int?
+  esforco         Int?
+  observacoes     String?
+  notes           Note[]
+  user            User              @relation(fields: [userId], references: [id])
+  TreinoExercicio TreinoExercicio[]
 }
 
 model Exercise {
-  id       Int               @id @default(autoincrement())
-  name     String            @unique
-  photoUrl String? // URL da imagem, opcional
-  musculo  String?
-  treinos  TreinoExercicio[]
-}
-
-model TreinoExercicio {
-  id         Int      @id @default(autoincrement())
-  treino     Treino   @relation(fields: [treinoId], references: [id])
-  treinoId   Int
-  exercise   Exercise @relation(fields: [exerciseId], references: [id])
-  exerciseId Int
-  carga      Int
-  series     Serie[] // Relação 1:N com séries
-}
-
-model Serie {
-  id                Int             @id @default(autoincrement())
-  treinoExercicio   TreinoExercicio @relation(fields: [treinoExercicioId], references: [id])
-  treinoExercicioId Int
-  tipoSerie         String
-  carga             Int
-  reps              Int
+  id              Int               @id @default(autoincrement())
+  name            String            @unique
+  photoUrl        String?
+  musculo         String?
+  TreinoExercicio TreinoExercicio[]
 }
 
 model Note {
   id       Int     @id @default(autoincrement())
   content  String
-  treinoId Int? // pode ser nulo
+  treinoId Int?
   treino   Treino? @relation(fields: [treinoId], references: [id])
+}
+
+model Medalha {
+  id            Int         @id @default(autoincrement())
+  nome          String
+  descricao     String
+  userId        Int
+  gamificacaoId Int
+  dataConquista DateTime    @default(now())
+  User          User        @relation(fields: [userId], references: [id])
+  gamificacao   Gamificacao @relation(fields: [gamificacaoId], references: [id], name: "GamificacaoMedalha")
+}
+
+model Serie {
+  id                Int             @id @default(autoincrement())
+  treinoExercicioId Int
+  tipoSerie         String
+  carga             Int
+  reps              Int
+  TreinoExercicio   TreinoExercicio @relation(fields: [treinoExercicioId], references: [id])
+}
+
+model TreinoExercicio {
+  id         Int      @id @default(autoincrement())
+  treinoId   Int
+  exerciseId Int
+  carga      Int
+  Serie      Serie[]
+  Exercise   Exercise @relation(fields: [exerciseId], references: [id])
+  Treino     Treino   @relation(fields: [treinoId], references: [id])
+}
+
+model Gamificacao {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  pontos    Int      @default(0)
+  xpGanho   Int
+  nivel     Int      @default(1) // ✅ adicionado
+  descricao String?
+  data      DateTime @default(now())
+
+  user     User      @relation(fields: [userId], references: [id])
+  medalhas Medalha[] @relation("GamificacaoMedalha")
 }

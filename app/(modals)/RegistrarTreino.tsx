@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
   Alert,
@@ -16,7 +17,7 @@ import AdicionarExercicio, { Exercise } from './AdicionarExercicio';
 
 // Tipos...
 export type SerieDetalhe = {
-  tipoSerie: 'aquecimento' | 'pap' | 'validas';
+  tipoSerie: 'aquecimento' | 'feeder' | 'validas';
   carga: number;
   reps: number;
 };
@@ -29,8 +30,16 @@ export type ExercicioSelecionado = {
   seriesDetalhes: SerieDetalhe[];
 };
 
+const validarCampo0a10 = (nome: string, valor: any) => {
+  if (valor === undefined || valor === null) return;
+  if (typeof valor !== 'number' || valor < 0 || valor > 10) {
+    throw new Error(`${nome} deve ser um número entre 0 e 10.`);
+  }
+};
+
 export default function RegistrarTreino() {
   const { memoryToken } = useAuth();
+  const router = useRouter();
 
   const [titulo, setTitulo] = useState('');
   const [data, setData] = useState('');
@@ -71,6 +80,16 @@ export default function RegistrarTreino() {
       Alert.alert('Erro', 'Data inválida. Use o formato AAAA-MM-DD');
       return;
     }
+    
+ try {
+      validarCampo0a10('Descanso', Number(descanso));
+      validarCampo0a10('Alimentação', Number(alimentacao));
+      validarCampo0a10('Humor', Number(humor));
+      validarCampo0a10('Esforço', Number(esforco));
+    } catch (err: any) {
+      Alert.alert('Erro', err.message);
+      return;
+    }
 
     try {
       const response = await fetch('http://192.168.15.8:3333/api/treinos', {
@@ -105,7 +124,38 @@ export default function RegistrarTreino() {
         return;
       }
 
-      Alert.alert('Sucesso', `Treino "${titulo}" salvo com sucesso!`);
+    Alert.alert(
+      'Sucesso',
+      `Treino "${titulo}" salvo com sucesso!`,
+      [
+        {
+          text: 'OK',
+           onPress: () => router.back()
+        }
+      ]
+    );
+
+try {
+  const xpResponse = await fetch('http://192.168.15.8:3333/api/gamificacao/add-xp', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${memoryToken}`,
+    },
+    body: JSON.stringify({
+      xpGanho: 10, // valor fixo de XP ganho por treino
+    }),
+  });
+
+  if (xpResponse.ok) {
+    console.log('XP adicionado com sucesso!');
+  } else {
+    const err = await xpResponse.json();
+    console.warn('Falha ao adicionar XP:', err);
+  }
+} catch (xpError) {
+  console.warn('Erro ao adicionar XP:', xpError);
+}
       setTitulo('');
       setData('');
       setExercicios([]);
@@ -191,10 +241,10 @@ export default function RegistrarTreino() {
                     onChangeText={text => {
                       const newExercicios = [...exercicios];
                       newExercicios[idx].seriesDetalhes[sidx].tipoSerie =
-                        text as 'aquecimento' | 'pap' | 'validas';
+                        text as 'aquecimento' | 'feeder' | 'validas';
                       setExercicios(newExercicios);
                     }}
-                    placeholder="aquecimento, pap ou validas"
+                    placeholder="aquecimento, feeder ou validas"
                     placeholderTextColor="#999"
                   />
 
@@ -312,6 +362,7 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#121212',
     flex: 1,
+    paddingTop: 50
   },
   label: {
     fontWeight: 'bold',
