@@ -1,7 +1,9 @@
 import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
+  FlatList,
   Image,
   StyleSheet,
   Text,
@@ -11,43 +13,60 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { useAuth } from '../../contexts/AuthContext';
+import { useUser } from '../../contexts/UserContext';
 
 export default function PerfilScreen() {
-  const { memoryToken } = useAuth();
+  const { memoryToken, logout } = useAuth();
+  const { setUser } = useUser();
+  const router = useRouter();
 
   const [fotoUri, setFotoUri] = useState<string | null>(null);
-
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('********');
-
   const [editandoNome, setEditandoNome] = useState(false);
   const [editandoEmail, setEditandoEmail] = useState(false);
   const [editandoSenha, setEditandoSenha] = useState(false);
+
+  // Gamificação
+  const [nivel, setNivel] = useState(1);
+  const [pontos, setPontos] = useState(0);
+  const [medalhas, setMedalhas] = useState<any[]>([]);
 
   useEffect(() => {
     async function fetchPerfil() {
       try {
         const res = await fetch('http://192.168.15.8:3333/api/perfil', {
-          headers: {
-            Authorization: `Bearer ${memoryToken}`,
-          },
+          headers: { Authorization: `Bearer ${memoryToken}` },
         });
-
-        if (!res.ok) {
-          throw new Error('Erro ao buscar perfil');
-        }
-
+        if (!res.ok) throw new Error('Erro ao buscar perfil');
         const data = await res.json();
         setNome(data.name);
         setEmail(data.email);
+        setFotoUri(data.photoUrl);
       } catch (err) {
         Alert.alert('Erro', 'Não foi possível carregar os dados do perfil.');
       }
     }
 
+    async function fetchGamificacao() {
+      try {
+        const res = await fetch('http://192.168.15.8:3333/api/gamificacao', {
+          headers: { Authorization: `Bearer ${memoryToken}` },
+        });
+        if (!res.ok) throw new Error('Erro ao buscar gamificação');
+        const data = await res.json();
+        setNivel(data.nivel);
+        setPontos(data.pontos);
+        setMedalhas(data.medalhas || []);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
     if (memoryToken) {
       fetchPerfil();
+      fetchGamificacao();
     }
   }, [memoryToken]);
 
@@ -63,9 +82,7 @@ export default function PerfilScreen() {
       quality: 1,
     });
 
-    if (!result.canceled) {
-      setFotoUri(result.assets[0].uri);
-    }
+    if (!result.canceled) setFotoUri(result.assets[0].uri);
   }
 
   async function atualizarCampo(chave: string, valor: string) {
@@ -76,27 +93,32 @@ export default function PerfilScreen() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${memoryToken}`,
         },
-        body: JSON.stringify({ [chave]: valor }),
+        body: JSON.stringify({ [chave]: valor, photoUrl: fotoUri }),
       });
-
-      if (!response.ok) {
-        throw new Error('Erro ao atualizar');
-      }
-
+      if (!response.ok) throw new Error('Erro ao atualizar');
       Alert.alert('Sucesso', `${chave} atualizado com sucesso!`);
     } catch (error) {
       Alert.alert('Erro', 'Não foi possível atualizar o campo.');
     }
   }
 
+  async function handleLogout() {
+    await logout();
+    setUser(null);
+    router.replace('/');
+  }
+
   return (
     <View style={styles.container}>
+      {/* Foto do Perfil */}
       <TouchableOpacity onPress={escolherImagem}>
         {fotoUri ? (
           <Image source={{ uri: fotoUri }} style={styles.fotoPerfil} />
         ) : (
           <Image
-            source={{ uri: 'https://saladeimprensa.com.br/images/noticias/1763/5f665324a3a9bc93228b63cf8219aa04.webp' }}
+            source={{
+              uri: 'https://saladeimprensa.com.br/images/noticias/1763/5f665324a3a9bc93228b63cf8219aa04.webp',
+            }}
             style={styles.fotoPerfil}
           />
         )}
@@ -163,6 +185,43 @@ export default function PerfilScreen() {
           <Icon name="edit-2" size={20} color="#333" />
         </TouchableOpacity>
       </View>
+
+      {/* Barra de XP */}
+      <View style={styles.xpContainer}>
+        <Text style={styles.texto}>Nível {nivel} — {pontos}/100 XP</Text>
+        <View style={styles.xpBarBackground}>
+          <View
+            style={[
+              styles.xpBarForeground,
+              { width: `${(pontos / 100) * 100}%` },
+            ]}
+          />
+        </View>
+      </View>
+
+      {/* Medalhas */}
+      <Text style={[styles.texto, { marginTop: 15, fontWeight: 'bold' }]}>Medalhas:</Text>
+      <FlatList
+        horizontal
+        data={medalhas}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <View style={styles.medalhaContainer}>
+            <Image
+              source={{ uri: 'https://cdn-icons-png.flaticon.com/512/2583/2583341.png' }}
+              style={styles.medalhaImage}
+            />
+            <Text style={styles.medalhaNome}>{item.nome}</Text>
+          </View>
+        )}
+        showsHorizontalScrollIndicator={false}
+        style={{ marginTop: 10 }}
+      />
+
+      {/* Botão de Logout */}
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <Text style={styles.logoutText}>Sair</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -172,18 +231,15 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     alignItems: 'center',
-    backgroundColor: '#121212', // fundo escuro
+    backgroundColor: '#121212',
+    paddingTop: 80
   },
   fotoPerfil: {
     width: 120,
     height: 120,
     borderRadius: 60,
     marginBottom: 20,
-    backgroundColor: '#333333', // fundo escuro para a foto
-  },
-  fotoPlaceholder: {
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: '#333333',
   },
   campo: {
     width: '90%',
@@ -192,23 +248,63 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 18,
     borderBottomWidth: 1,
-    borderBottomColor: '#444', // borda escura
+    borderBottomColor: '#444',
     paddingBottom: 4,
   },
   texto: {
     fontSize: 18,
-    color: '#fff', // texto branco
+    color: '#fff',
     flex: 1,
   },
   input: {
     flex: 1,
     fontSize: 18,
     borderBottomWidth: 1,
-    borderBottomColor: '#007bff', // borda azul para input ativo
+    borderBottomColor: '#007bff',
     paddingVertical: 2,
-    color: '#fff', // texto input branco
+    color: '#fff',
   },
-  iconEdit: {
-    color: '#007bff', // azul ícone editar
+  logoutButton: {
+    marginTop: 30,
+    padding: 14,
+    backgroundColor: '#ff4d4d',
+    borderRadius: 8,
+    width: '90%',
+    alignItems: 'center',
+  },
+  logoutText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  xpContainer: {
+    width: '90%',
+    marginTop: 20,
+  },
+  xpBarBackground: {
+    width: '100%',
+    height: 20,
+    backgroundColor: '#444',
+    borderRadius: 10,
+    marginTop: 5,
+  },
+  xpBarForeground: {
+    height: '100%',
+    backgroundColor: '#007bff',
+    borderRadius: 10,
+  },
+  medalhaContainer: {
+    alignItems: 'center',
+    marginRight: 15,
+  },
+  medalhaImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+  },
+  medalhaNome: {
+    color: '#fff',
+    fontSize: 12,
+    marginTop: 5,
   },
 });

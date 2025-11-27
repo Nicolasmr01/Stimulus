@@ -25,7 +25,7 @@ type TreinoExercicio = {
     name: string;
     photoUrl?: string;
   };
-  seriesDetalhes: SerieDetalhe[];  // array de séries detalhadas
+  seriesDetalhes: SerieDetalhe[];
 };
 
 type Note = {
@@ -65,6 +65,37 @@ export default function TreinosAnteriores() {
       });
   }, [memoryToken]);
 
+  // --- Função para excluir treino ---
+  const handleDeleteTreino = async (treinoId: number) => {
+  console.log("Chamando DELETE para treino:", treinoId);
+
+  try {
+    const res = await fetch(`http://192.168.15.8:3333/api/treinos/${treinoId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${memoryToken}`,
+        'Content-Type': 'application/json'
+      },
+    });
+
+    const txt = await res.text();
+    console.log("STATUS DELETE:", res.status);
+    console.log("RESPOSTA DELETE:", txt);
+
+    if (!res.ok) {
+      Alert.alert("ERRO", `Status: ${res.status}\nResposta: ${txt}`);
+      return;
+    }
+
+    setTreinos(prev => prev.filter(t => t.id !== treinoId));
+    Alert.alert("OK", "Treino excluído!");
+  } catch (err) {
+    console.error(err);
+    Alert.alert("Erro", "Erro desconhecido.");
+  }
+};
+
+
   const cardStyle = {
     backgroundColor: '#333333',
     padding: 10,
@@ -74,6 +105,7 @@ export default function TreinosAnteriores() {
 
   const textStyle = { color: '#fff' };
 
+  // Tela quando um treino é selecionado
   if (treinoSelecionado) {
     return (
       <ScrollView style={{ padding: 20, backgroundColor: '#121212' }}>
@@ -94,6 +126,7 @@ export default function TreinosAnteriores() {
         <Text style={[{ fontWeight: 'bold', marginBottom: 5 }, textStyle]}>
           Exercícios:
         </Text>
+
         {treinoSelecionado.exercicios.map(ex => (
           <View key={ex.id} style={cardStyle}>
             <Text style={{ fontWeight: 'bold', color: '#fff' }}>
@@ -104,7 +137,8 @@ export default function TreinosAnteriores() {
             <Text style={{ fontWeight: 'bold', marginTop: 6, color: '#fff' }}>
               Séries Detalhadas:
             </Text>
-            {ex.seriesDetalhes && ex.seriesDetalhes.length > 0 ? (
+
+            {ex.seriesDetalhes?.length > 0 ? (
               ex.seriesDetalhes.map(sd => (
                 <View
                   key={sd.id}
@@ -132,29 +166,58 @@ export default function TreinosAnteriores() {
     );
   }
 
+  // Tela de lista de treinos
   return (
     <FlatList
       style={{ padding: 20, backgroundColor: '#121212', paddingTop: 100 }}
       data={treinos}
       keyExtractor={item => item.id.toString()}
       renderItem={({ item }) => (
-        <TouchableOpacity
-          onPress={() => setTreinoSelecionado(item)}
+        <View
           style={{
             backgroundColor: '#333333',
             padding: 15,
             marginBottom: 10,
             borderRadius: 8,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
           }}
         >
-          <Text style={{ fontWeight: 'bold', fontSize: 16, color: '#fff' }}>
-            {item.titulo}
-          </Text>
-          <Text style={{ color: '#fff' }}>
-            {new Date(item.data).toLocaleDateString()}
-          </Text>
-        </TouchableOpacity>
+          {/* Botão para abrir treino */}
+          <TouchableOpacity
+            onPress={() => setTreinoSelecionado(item)}
+            style={{ flex: 1 }}
+          >
+            <Text style={{ fontWeight: 'bold', fontSize: 16, color: '#fff' }}>
+              {item.titulo}
+            </Text>
+            <Text style={{ color: '#fff' }}>
+              {new Date(item.data).toLocaleDateString()}
+            </Text>
+          </TouchableOpacity>
+
+          {/* Botão excluir */}
+          <TouchableOpacity
+            onPress={() => {
+              console.log("Excluindo treino ID:", item.id);
+              handleDeleteTreino(item.id);
+            }}
+            style={{
+              backgroundColor: '#ff4444',
+              paddingVertical: 6,
+              paddingHorizontal: 10,
+              borderRadius: 6,
+              marginLeft: 12,
+            }}
+          >
+            <Text style={{ color: 'white', fontWeight: 'bold' }}>
+              Excluir
+            </Text>
+          </TouchableOpacity>
+        </View>
       )}
     />
   );
 }
+

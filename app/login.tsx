@@ -1,49 +1,32 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fieldError, setFieldError] = useState('');  // 🔥 novo
   const [loginError, setLoginError] = useState(false);
+
   const router = useRouter();
-  const { setMemoryToken, savePersistentToken, clearPersistentToken } = useAuth();
+  const { login } = useAuth();
 
   const handleLogin = async () => {
+    setFieldError('');
+    setLoginError(false);
+
     if (!email || !password) {
-      Alert.alert('Erro', 'Preencha todos os campos');
+      setFieldError('Preencha todos os campos');
       return;
     }
 
     try {
-      const response = await fetch('http://192.168.15.8:3333/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!response.ok) {
-        setLoginError(true);
-        return;
-      }
-
-      const data = await response.json();
-
-      if (!data.token) {
-        Alert.alert('Erro', 'Token não recebido');
-        return;
-      }
-
-
-      await clearPersistentToken(); // 🔥 limpa token anterior
-      await savePersistentToken(data.token);
-      setMemoryToken(data.token);
-
-      setLoginError(false);
+      await login(email, password);
       router.replace('/(tabs)/home');
+
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível conectar ao servidor');
+      setLoginError(true);
       console.error(error);
     }
   };
@@ -54,30 +37,45 @@ export default function LoginScreen() {
         placeholder="Email"
         placeholderTextColor="#888"
         value={email}
-        onChangeText={setEmail}
+        onChangeText={(t) => {
+          setEmail(t);
+          setFieldError('');
+          setLoginError(false);
+        }}
         keyboardType="email-address"
         autoCapitalize="none"
         style={styles.input}
       />
+
       <TextInput
         placeholder="Senha"
         placeholderTextColor="#888"
         value={password}
-        onChangeText={setPassword}
+        onChangeText={(t) => {
+          setPassword(t);
+          setFieldError('');
+          setLoginError(false);
+        }}
         secureTextEntry
         style={styles.input}
       />
+
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Entrar</Text>
       </TouchableOpacity>
 
+      {/* 🔥 Erro de campos vazios */}
+      {fieldError !== '' && (
+        <Text style={{ color: 'red', textAlign: 'center', marginTop: 10 }}>
+          {fieldError}
+        </Text>
+      )}
+
+      {/* 🔥 Erro de login inválido */}
       {loginError && (
-        <View style={styles.registerPrompt}>
-          <Text style={{ color: '#fff', marginRight: 6 }}>Usuário ou senha inválidos.</Text>
-          <TouchableOpacity onPress={() => router.push('/register')}>
-            <Text style={styles.registerLink}>Registrar-se</Text>
-          </TouchableOpacity>
-        </View>
+        <Text style={{ color: 'red', textAlign: 'center', marginTop: 10 }}>
+          Usuário ou senha inválidos.
+        </Text>
       )}
     </View>
   );
@@ -109,15 +107,5 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     textAlign: 'center',
-  },
-  registerPrompt: {
-    flexDirection: 'row',
-    marginTop: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  registerLink: {
-    color: '#4da6ff',
-    textDecorationLine: 'underline',
   },
 });

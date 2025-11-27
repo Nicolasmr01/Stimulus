@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
   FlatList,
   SafeAreaView,
   StyleSheet,
   Text,
+  TextInput,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
@@ -29,6 +30,12 @@ type Treino = {
 export default function Anotacoes() {
   const [treinos, setTreinos] = useState<Treino[]>([]);
   const { memoryToken } = useAuth();
+  const [editingTreinoId, setEditingTreinoId] = useState<number | null>(null);
+  const [descanso, setDescanso] = useState<number | string>('');
+  const [alimentacao, setAlimentacao] = useState<number | string>('');
+  const [humor, setHumor] = useState<number | string>('');
+  const [esforco, setEsforco] = useState<number | string>('');
+  const [observacoes, setObservacoes] = useState<string>('');
 
   useEffect(() => {
     if (!memoryToken) return;
@@ -45,8 +52,53 @@ export default function Anotacoes() {
       .then(data => {
         setTreinos(Array.isArray(data) ? data : []);
       })
-      .catch(() => Alert.alert('Erro', 'Falha ao carregar anotações'));
+      .catch(err => console.log("ERRO AO CARREGAR TREINOS:", err));
   }, [memoryToken]);
+
+  // Função para editar o treino
+  const handleEditTreino = async () => {
+    if (editingTreinoId === null) return;
+
+    // Converte os valores para número onde necessário
+    const updatedData = {
+      descanso: Number(descanso),
+      alimentacao: Number(alimentacao),
+      humor: Number(humor),
+      esforco: Number(esforco),
+      observacoes,
+    };
+
+    try {
+      const res = await fetch(
+        `http://192.168.15.8:3333/api/treinos/${editingTreinoId}`,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${memoryToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(updatedData),
+        }
+      );
+      if (!res.ok) return;
+
+      // Atualiza o estado local com os novos dados
+      const updatedTreino = await res.json();
+      setTreinos(prev =>
+        prev.map(t => (t.id === editingTreinoId ? { ...t, ...updatedTreino } : t))
+      );
+
+      // Limpa os campos de edição
+      setEditingTreinoId(null);
+      setDescanso('');
+      setAlimentacao('');
+      setHumor('');
+      setEsforco('');
+      setObservacoes('');
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -82,19 +134,65 @@ export default function Anotacoes() {
                 <Text style={styles.cardText}>Observações: {item.observacoes}</Text>
               )}
 
-              {item.notes && item.notes.length > 0 ? (
-                <>
-                  <Text style={[styles.cardText, { fontWeight: 'bold', marginTop: 10 }]}>
-                    Notas:
-                  </Text>
-                  {item.notes.map(note => (
-                    <Text key={note.id} style={styles.cardText}>
-                      • {note.content}
-                    </Text>
-                  ))}
-                </>
-              ) : (
-                <Text style={styles.noNote}>Nenhuma nota para este treino</Text>
+              <TouchableOpacity
+                style={styles.editButton}
+                onPress={() => {
+                  setEditingTreinoId(item.id);
+                  setDescanso(item.descanso || '');
+                  setAlimentacao(item.alimentacao || '');
+                  setHumor(item.humor || '');
+                  setEsforco(item.esforco || '');
+                  setObservacoes(item.observacoes || '');
+                }}
+              >
+                <Text style={{ color: '#fff', fontWeight: 'bold' }}>Editar Treino</Text>
+              </TouchableOpacity>
+
+              {editingTreinoId === item.id && (
+                <View style={styles.editForm}>
+                  <TextInput
+                    style={styles.input}
+                    value={descanso.toString()}
+                    onChangeText={setDescanso}
+                    placeholder="Descanso (0-10)"
+                    keyboardType="numeric"
+                  />
+                  <TextInput
+                    style={styles.input}
+                    value={alimentacao.toString()}
+                    onChangeText={setAlimentacao}
+                    placeholder="Alimentação (0-10)"
+                    keyboardType="numeric"
+                  />
+                  <TextInput
+                    style={styles.input}
+                    value={humor.toString()}
+                    onChangeText={setHumor}
+                    placeholder="Humor (0-10)"
+                    keyboardType="numeric"
+                  />
+                  <TextInput
+                    style={styles.input}
+                    value={esforco.toString()}
+                    onChangeText={setEsforco}
+                    placeholder="Esforço (0-10)"
+                    keyboardType="numeric"
+                  />
+                  <TextInput
+                    style={[styles.input, { height: 80 }]}
+                    value={observacoes}
+                    onChangeText={setObservacoes}
+                    placeholder="Observações"
+                    multiline
+                  />
+
+                  <TouchableOpacity
+                    style={styles.saveButton}
+                    onPress={handleEditTreino}
+                  >
+                    <Text style={{ color: '#fff', fontWeight: 'bold' }}>Salvar</Text>
+                  </TouchableOpacity>
+                </View>
               )}
             </View>
           )}
@@ -138,9 +236,31 @@ const styles = StyleSheet.create({
   cardText: {
     color: '#000',
   },
-  noNote: {
-    fontStyle: 'italic',
-    marginTop: 10,
-    color: '#444',
+  editButton: {
+    backgroundColor: '#4287f5',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    marginTop: 8,
+    alignSelf: 'flex-start',
+  },
+  editForm: {
+    marginTop: 12,
+  },
+  input: {
+    backgroundColor: '#fff',
+    padding: 8,
+    borderRadius: 4,
+    marginTop: 8,
+  },
+  saveButton: {
+    backgroundColor: '#28a745',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 12,
+    alignSelf: 'flex-start',
   },
 });
