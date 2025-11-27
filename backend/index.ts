@@ -1,10 +1,10 @@
-import express from 'express';
 import cors from 'cors';
-import userRoutes from './src/routes/user';
-import treinoRoutes from './src/routes/treino';
-import notesRoutes from './src/routes/notes';
-import gamificacaoRoutes from './src/routes/gamificacao';
 import dotenv from "dotenv";
+import express from 'express';
+import gamificacaoRoutes from './src/routes/gamificacao';
+import notesRoutes from './src/routes/notes';
+import treinoRoutes from './src/routes/treino';
+import userRoutes from './src/routes/user';
 dotenv.config();
 
 
