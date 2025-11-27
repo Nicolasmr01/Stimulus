@@ -27,7 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // --- Função para login ---
   const login = async (email: string, password: string) => {
-    const res = await fetch(`${BASE_API_URL}api/login`, {
+    const res = await fetch(`${BASE_API_URL}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setMemoryToken(token);
 
         // busca perfil do usuário usando token
-        const res = await fetch(`${BASE_API_URL}api/perfil`, {
+        const res = await fetch(`${BASE_API_URL}/perfil`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 

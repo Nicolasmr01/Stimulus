@@ -51,7 +51,7 @@ export default function TreinosAnteriores() {
   useEffect(() => {
     if (!memoryToken) return;
 
-    fetch(`${BASE_API_URL}api/treinos`, {
+    fetch(`${BASE_API_URL}/treinos`, {
       headers: {
         Authorization: `Bearer ${memoryToken}`,
       },
@@ -71,7 +71,7 @@ export default function TreinosAnteriores() {
   console.log("Chamando DELETE para treino:", treinoId);
 
   try {
-    const res = await fetch(`${BASE_API_URL}api/treinos/${treinoId}`, {
+    const res = await fetch(`${BASE_API_URL}/treinos/${treinoId}`, {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${memoryToken}`,

@@ -45,7 +45,7 @@ export default function ChatBot() {
     setMessages((prev) => [...prev, loadingMsg]);
 
     try {
-      const response = await fetch(`${BASE_API_URL}api/treinos/ai`, {
+      const response = await fetch(`${BASE_API_URL}/treinos/ai`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

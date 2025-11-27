@@ -51,7 +51,7 @@ export default function EscolherExercicio({ onVoltar, onAdicionarExercicios }: P
   useEffect(() => {
     if (!memoryToken) return;
 
-    fetch(`${BASE_API_URL}api/exercicios`, {
+    fetch(`${BASE_API_URL}/exercicios`, {
       headers: { Authorization: `Bearer ${memoryToken}` },
     })
       .then(res => res.json())
