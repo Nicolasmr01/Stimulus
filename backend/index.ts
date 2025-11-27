@@ -13,7 +13,7 @@ app.use(express.json());
 
 const allowedOrigins = [
   // URL PÚBLICA do seu frontend no Vercel
-  'https://stimulus-ruby.vercel.app', 
+  'https://stimulus-delta.vercel.app', 
   // URLs de desenvolvimento local
   'http://localhost:3333',
   'http://localhost',
