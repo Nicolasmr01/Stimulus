@@ -1,15 +1,15 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
 import { useAuth } from '../../contexts/AuthContext';
@@ -92,7 +92,7 @@ export default function RegistrarTreino() {
     }
 
     try {
-      const response = await fetch('http://192.168.15.8:3333/api/treinos', {
+      const response = await fetch('${API_URL}api/treinos', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -136,7 +136,7 @@ export default function RegistrarTreino() {
     );
 
 try {
-  const xpResponse = await fetch('http://192.168.15.8:3333/api/gamificacao/add-xp', {
+  const xpResponse = await fetch('${API_URL}api/gamificacao/add-xp', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
