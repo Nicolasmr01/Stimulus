@@ -1,18 +1,19 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 import { useAuth } from '../../contexts/AuthContext';
+import { BASE_API_URL } from '../../utils/api';
 import AdicionarExercicio, { Exercise } from './AdicionarExercicio';
 
 // Tipos...
@@ -92,7 +93,7 @@ export default function RegistrarTreino() {
     }
 
     try {
-      const response = await fetch('${API_URL}api/treinos', {
+      const response = await fetch(`${BASE_API_URL}api/treinos`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -136,7 +137,7 @@ export default function RegistrarTreino() {
     );
 
 try {
-  const xpResponse = await fetch('${API_URL}api/gamificacao/add-xp', {
+  const xpResponse = await fetch(`${BASE_API_URL}api/gamificacao/add-xp`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

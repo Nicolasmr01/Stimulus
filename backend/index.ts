@@ -11,7 +11,27 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
-app.use(cors());
+const allowedOrigins = [
+  // URL PÚBLICA do seu frontend no Vercel
+  'https://stimulus-ruby.vercel.app/', 
+  // URLs de desenvolvimento local
+  'http://localhost:3333',
+];
+
+const corsOptions = {
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    // Permite requisições sem origem (como apps mobile e Postman) e origens permitidas
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true, 
+};
+
+app.use(cors(corsOptions));
 
 // Rotas da API
 app.use('/api', gamificacaoRoutes);
@@ -19,8 +39,8 @@ app.use('/api', userRoutes);
 app.use('/api', treinoRoutes);
 app.use('/api', notesRoutes);
 
-
+const PORT = process.env.PORT || 3333;
 // Servidor
-app.listen(3333, () => {
-  console.log('Servidor rodando na porta 3333');
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
 });

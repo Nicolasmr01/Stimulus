@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import {
-    FlatList,
-    SafeAreaView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  FlatList,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
+import { BASE_API_URL } from '../../utils/api';
 
 type Note = {
   id: number;
@@ -40,7 +41,7 @@ export default function Anotacoes() {
   useEffect(() => {
     if (!memoryToken) return;
 
-    fetch('${API_URL}api/treinos', {
+    fetch(`${BASE_API_URL}api/treinos`, {
       headers: {
         Authorization: `Bearer ${memoryToken}`,
       },
@@ -70,7 +71,7 @@ export default function Anotacoes() {
 
     try {
       const res = await fetch(
-        `${API_URL}api/treinos/${editingTreinoId}`,
+        `${BASE_API_URL}api/treinos/${editingTreinoId}`,
         {
           method: 'PUT',
           headers: {

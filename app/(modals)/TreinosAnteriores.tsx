@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import {
-    Alert,
-    FlatList,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  FlatList,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
+import { BASE_API_URL } from '../../utils/api';
 
 type SerieDetalhe = {
   id: number;
@@ -50,7 +51,7 @@ export default function TreinosAnteriores() {
   useEffect(() => {
     if (!memoryToken) return;
 
-    fetch('${API_URL}api/treinos', {
+    fetch(`${BASE_API_URL}api/treinos`, {
       headers: {
         Authorization: `Bearer ${memoryToken}`,
       },
@@ -70,7 +71,7 @@ export default function TreinosAnteriores() {
   console.log("Chamando DELETE para treino:", treinoId);
 
   try {
-    const res = await fetch(`${API_URL}api/treinos/${treinoId}`, {
+    const res = await fetch(`${BASE_API_URL}api/treinos/${treinoId}`, {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${memoryToken}`,
