@@ -1,7 +1,7 @@
-import { Prisma, PrismaClient } from '@prisma/client';
 import express from 'express';
-import Groq from "groq-sdk";
+import { PrismaClient, Prisma } from '@prisma/client';
 import verificarToken from '../../middlewares/verificarToken';
+import Groq from "groq-sdk";
 
 const router = express.Router();
 const prisma = new PrismaClient();
