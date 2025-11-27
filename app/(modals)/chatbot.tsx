@@ -1,14 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  FlatList,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    FlatList,
+    KeyboardAvoidingView,
+    Platform,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -44,7 +44,7 @@ export default function ChatBot() {
     setMessages((prev) => [...prev, loadingMsg]);
 
     try {
-      const response = await fetch("http://192.168.15.8:3333/api/treinos/ai", {
+      const response = await fetch("${API_URL}api/treinos/ai", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

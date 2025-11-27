@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
-  FlatList,
-  Image,
-  Modal,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    FlatList,
+    Image,
+    Modal,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { useAuth } from '../../contexts/AuthContext';
@@ -50,7 +50,7 @@ export default function EscolherExercicio({ onVoltar, onAdicionarExercicios }: P
   useEffect(() => {
     if (!memoryToken) return;
 
-    fetch('http://192.168.15.8:3333/api/exercicios', {
+    fetch('${API_URL}api/exercicios', {
       headers: { Authorization: `Bearer ${memoryToken}` },
     })
       .then(res => res.json())

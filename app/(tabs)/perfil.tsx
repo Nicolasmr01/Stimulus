@@ -2,14 +2,14 @@ import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
-  FlatList,
-  Image,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    FlatList,
+    Image,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { useAuth } from '../../contexts/AuthContext';
@@ -36,7 +36,7 @@ export default function PerfilScreen() {
   useEffect(() => {
     async function fetchPerfil() {
       try {
-        const res = await fetch('http://192.168.15.8:3333/api/perfil', {
+        const res = await fetch('${API_URL}api/perfil', {
           headers: { Authorization: `Bearer ${memoryToken}` },
         });
         if (!res.ok) throw new Error('Erro ao buscar perfil');
@@ -51,7 +51,7 @@ export default function PerfilScreen() {
 
     async function fetchGamificacao() {
       try {
-        const res = await fetch('http://192.168.15.8:3333/api/gamificacao', {
+        const res = await fetch('${API_URL}api/gamificacao', {
           headers: { Authorization: `Bearer ${memoryToken}` },
         });
         if (!res.ok) throw new Error('Erro ao buscar gamificação');
@@ -87,7 +87,7 @@ export default function PerfilScreen() {
 
   async function atualizarCampo(chave: string, valor: string) {
     try {
-      const response = await fetch(`http://192.168.15.8:3333/api/user`, {
+      const response = await fetch(`${API_URL}api/user`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

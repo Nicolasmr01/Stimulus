@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
-  FlatList,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
+    Alert,
+    FlatList,
+    ScrollView,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -50,7 +50,7 @@ export default function TreinosAnteriores() {
   useEffect(() => {
     if (!memoryToken) return;
 
-    fetch('http://192.168.15.8:3333/api/treinos', {
+    fetch('${API_URL}api/treinos', {
       headers: {
         Authorization: `Bearer ${memoryToken}`,
       },
@@ -70,7 +70,7 @@ export default function TreinosAnteriores() {
   console.log("Chamando DELETE para treino:", treinoId);
 
   try {
-    const res = await fetch(`http://192.168.15.8:3333/api/treinos/${treinoId}`, {
+    const res = await fetch(`${API_URL}api/treinos/${treinoId}`, {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${memoryToken}`,

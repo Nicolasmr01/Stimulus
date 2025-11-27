@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import {
-  FlatList,
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    FlatList,
+    SafeAreaView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -40,7 +40,7 @@ export default function Anotacoes() {
   useEffect(() => {
     if (!memoryToken) return;
 
-    fetch('http://192.168.15.8:3333/api/treinos', {
+    fetch('${API_URL}api/treinos', {
       headers: {
         Authorization: `Bearer ${memoryToken}`,
       },
@@ -70,7 +70,7 @@ export default function Anotacoes() {
 
     try {
       const res = await fetch(
-        `http://192.168.15.8:3333/api/treinos/${editingTreinoId}`,
+        `${API_URL}api/treinos/${editingTreinoId}`,
         {
           method: 'PUT',
           headers: {
