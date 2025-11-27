@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
+import { BASE_API_URL } from '../utils/api';
 import { universalStorage } from '../utils/universalStorage';
 
 type UserType = {
@@ -26,7 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // --- Função para login ---
   const login = async (email: string, password: string) => {
-    const res = await fetch('${API_URL}api/login', {
+    const res = await fetch(`${BASE_API_URL}api/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
@@ -63,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setMemoryToken(token);
 
         // busca perfil do usuário usando token
-        const res = await fetch('${API_URL}api/perfil', {
+        const res = await fetch(`${BASE_API_URL}api/perfil`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 

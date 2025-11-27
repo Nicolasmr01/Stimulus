@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
+import { BASE_API_URL } from '../utils/api';
 
 const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+=?])[A-Za-z0-9!@#$%^&*()_+=?]{6,15}$/;
 
@@ -35,7 +36,7 @@ export default function RegisterScreen() {
 
     try {
       // Faz o registro no servidor
-      const response = await fetch('${API_URL}api/register', {
+      const response = await fetch(`${BASE_API_URL}api/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),
