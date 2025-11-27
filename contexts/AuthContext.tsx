@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { BASE_API_URL } from '../utils/api';
+import { BASE_API_URL, fetchLogin } from '../utils/api'; // Importa a função e a URL
 import { universalStorage } from '../utils/universalStorage';
+
+// --- TIPOS ---
 
 type UserType = {
   id: number;
@@ -20,64 +22,73 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+// --- PROVIDER ---
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [memoryToken, setMemoryToken] = useState<string | null>(null);
   const [user, setUser] = useState<UserType | null>(null);
   const [isAuthChecked, setIsAuthChecked] = useState(false);
 
-  // --- Função para login ---
+  // 1. Função de Login (Usa o fetchLogin do api.ts)
   const login = async (email: string, password: string) => {
-    const res = await fetch(`${BASE_API_URL}/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
+    try {
+      // Chama a função centralizada no api.ts para fazer a requisição
+      const data = await fetchLogin({ email, password });
 
-    const data = await res.json();
+      // salva token no storage e na memória
+      await universalStorage.setItem('auth_token', data.token);
+      setMemoryToken(data.token);
 
-    if (!res.ok) throw new Error(data.error || 'Erro no login');
-
-    // salva token no storage e na memória
-    await universalStorage.setItem('auth_token', data.token);
-    setMemoryToken(data.token);
-
-    // salva dados do usuário no state
-    setUser({
-      id: data.user.id,
-      name: data.user.name,
-      email: data.user.email,
-    });
+      // salva dados do usuário no state
+      setUser({
+        id: data.user.id,
+        name: data.user.name,
+        email: data.user.email,
+      });
+    } catch (error) {
+      // Re-lança o erro para ser capturado pela tela (Register/Login)
+      throw error;
+    }
   };
 
-  // --- Função para logout ---
+  // 2. Função para logout
   const logout = async () => {
     await universalStorage.removeItem('auth_token');
     setMemoryToken(null);
     setUser(null);
   };
 
-  // --- Carregar token do storage ao iniciar ---
+  // 3. Carregar token do storage ao iniciar
   useEffect(() => {
     const loadAuth = async () => {
-      const token = await universalStorage.getItem('auth_token');
+      let token = await universalStorage.getItem('auth_token');
+      
       if (token) {
         setMemoryToken(token);
 
         // busca perfil do usuário usando token
-        const res = await fetch(`${BASE_API_URL}/perfil`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (res.ok) {
-          const userData = await res.json();
-          setUser({
-            id: userData.id,
-            name: userData.name,
-            email: userData.email,
+        try {
+          const res = await fetch(`${BASE_API_URL}/perfil`, {
+            headers: { Authorization: `Bearer ${token}` },
           });
-        } else {
-          // token inválido ou expirado
-          await logout();
+
+          if (res.ok) {
+            const userData = await res.json();
+            setUser({
+              id: userData.id,
+              name: userData.name,
+              email: userData.email,
+            });
+          } else {
+            // Token inválido ou expirado. Limpa o token e faz logout.
+            console.error("Token expirado ou inválido. Realizando logout.");
+            await logout();
+            token = null; // Garante que o estado final seja limpo
+          }
+        } catch (error) {
+            // Erro de rede na checagem do perfil
+            console.error("Erro ao buscar perfil:", error);
+            await logout(); 
         }
       }
 
