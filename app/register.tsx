@@ -36,7 +36,7 @@ export default function RegisterScreen() {
 
     try {
       // Faz o registro no servidor
-      const response = await fetch(`${BASE_API_URL}api/register`, {
+      const response = await fetch(`${BASE_API_URL}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),

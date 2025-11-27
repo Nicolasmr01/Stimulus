@@ -43,7 +43,7 @@ export async function fetchLogin(credentials: LoginCredentials) {
     password: credentials.password
   });
 
-  // 2. Faz a chamada usando a URL base (que será local ou Render)
+  // 2. Faz a chamada usando a URL base (que srerá local ou Render)
   const response = await fetch(`${BASE_API_URL}/login`, {
     method: 'POST',
     headers: {

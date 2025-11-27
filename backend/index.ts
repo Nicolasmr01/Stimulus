@@ -13,9 +13,11 @@ app.use(express.json());
 
 const allowedOrigins = [
   // URL PÚBLICA do seu frontend no Vercel
-  'https://stimulus-ruby.vercel.app/', 
+  'https://stimulus-ruby.vercel.app', 
   // URLs de desenvolvimento local
   'http://localhost:3333',
+  'http://localhost',
+  'http://192.168.15.8:3333'
 ];
 
 const corsOptions = {

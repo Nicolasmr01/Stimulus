@@ -93,7 +93,7 @@ export default function RegistrarTreino() {
     }
 
     try {
-      const response = await fetch(`${BASE_API_URL}api/treinos`, {
+      const response = await fetch(`${BASE_API_URL}/treinos`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -137,7 +137,7 @@ export default function RegistrarTreino() {
     );
 
 try {
-  const xpResponse = await fetch(`${BASE_API_URL}api/gamificacao/add-xp`, {
+  const xpResponse = await fetch(`${BASE_API_URL}/gamificacao/add-xp`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

@@ -37,7 +37,7 @@ export default function PerfilScreen() {
   useEffect(() => {
     async function fetchPerfil() {
       try {
-        const res = await fetch(`${BASE_API_URL}api/perfil`, {
+        const res = await fetch(`${BASE_API_URL}/perfil`, {
           headers: { Authorization: `Bearer ${memoryToken}` },
         });
         if (!res.ok) throw new Error('Erro ao buscar perfil');
@@ -52,7 +52,7 @@ export default function PerfilScreen() {
 
     async function fetchGamificacao() {
       try {
-        const res = await fetch(`${BASE_API_URL}api/gamificacao`, {
+        const res = await fetch(`${BASE_API_URL}/gamificacao`, {
           headers: { Authorization: `Bearer ${memoryToken}` },
         });
         if (!res.ok) throw new Error('Erro ao buscar gamificação');
@@ -88,7 +88,7 @@ export default function PerfilScreen() {
 
   async function atualizarCampo(chave: string, valor: string) {
     try {
-      const response = await fetch(`${BASE_API_URL}api/user`, {
+      const response = await fetch(`${BASE_API_URL}/user`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
