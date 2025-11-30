@@ -17,7 +17,8 @@ const allowedOrigins = [
   // URLs de desenvolvimento local
   'http://localhost:3333',
   'http://localhost',
-  'http://192.168.15.8:3333'
+  'http://192.168.15.8:3333',
+  'http://localhost:8081'
 ];
 
 const corsOptions = {
