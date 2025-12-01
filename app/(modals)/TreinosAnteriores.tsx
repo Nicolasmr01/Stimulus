@@ -1,20 +1,18 @@
+import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
   FlatList,
+  Image,
   ScrollView,
-  StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { BASE_API_URL } from '../../utils/api';
-// 💡 IMPORTANDO O BACKBUTTON (Assumindo que está em '../components/BackButton')
-import { Ionicons } from '@expo/vector-icons'; // Usado para o ícone de exclusão
-import BackButton from '../../assets/images/backbutton.png';
 
-// --- TIPOS ---
+
 type SerieDetalhe = {
   id: number;
   treinoExercicioId: number;
@@ -46,12 +44,10 @@ type Treino = {
   exercicios: TreinoExercicio[];
   notes: Note[];
 };
-// --- FIM TIPOS ---
-
 
 export default function TreinosAnteriores() {
   const { memoryToken } = useAuth();
-
+  const router = useRouter();
   const [treinos, setTreinos] = useState<Treino[]>([]);
   const [treinoSelecionado, setTreinoSelecionado] = useState<Treino | null>(null);
 
@@ -73,51 +69,34 @@ export default function TreinosAnteriores() {
       });
   }, [memoryToken]);
 
-  // --- Função para excluir treino ---
   const handleDeleteTreino = async (treinoId: number) => {
-    Alert.alert(
-      "Confirmar Exclusão",
-      "Tem certeza que deseja excluir este treino?",
-      [
-        {
-          text: "Cancelar",
-          style: "cancel"
+    console.log("Chamando DELETE para treino:", treinoId);
+
+    try {
+      const res = await fetch(`${BASE_API_URL}/treinos/${treinoId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${memoryToken}`,
+          'Content-Type': 'application/json'
         },
-        { 
-          text: "Excluir", 
-          onPress: async () => {
-            console.log("Chamando DELETE para treino:", treinoId);
-            try {
-              const res = await fetch(`${BASE_API_URL}/treinos/${treinoId}`, {
-                method: 'DELETE',
-                headers: {
-                  Authorization: `Bearer ${memoryToken}`,
-                  'Content-Type': 'application/json'
-                },
-              });
+      });
 
-              const txt = await res.text();
-              console.log("STATUS DELETE:", res.status);
-              console.log("RESPOSTA DELETE:", txt);
+      const txt = await res.text();
+      console.log("STATUS DELETE:", res.status);
+      console.log("RESPOSTA DELETE:", txt);
 
-              if (!res.ok) {
-                Alert.alert("ERRO", `Status: ${res.status}\nResposta: ${txt}`);
-                return;
-              }
+      if (!res.ok) {
+        Alert.alert("ERRO", `Status: ${res.status}\nResposta: ${txt}`);
+        return;
+      }
 
-              // Atualiza o estado da lista
-              setTreinos(prev => prev.filter(t => t.id !== treinoId));
-              Alert.alert("Sucesso", "Treino excluído!");
-            } catch (err) {
-              console.error(err);
-              Alert.alert("Erro", "Erro desconhecido.");
-            }
-          }
-        }
-      ]
-    );
+      setTreinos(prev => prev.filter(t => t.id !== treinoId));
+      Alert.alert("OK", "Treino excluído!");
+    } catch (err) {
+      console.error(err);
+      Alert.alert("Erro", "Erro desconhecido.");
+    }
   };
-
 
   const cardStyle = {
     backgroundColor: '#333333',
@@ -128,28 +107,23 @@ export default function TreinosAnteriores() {
 
   const textStyle = { color: '#fff' };
 
-  // --- TELA QUANDO UM TREINO É SELECIONADO (DETALHES) ---
+  // ---------------------------
+  // TELA DE DETALHE DO TREINO
+  // ---------------------------
   if (treinoSelecionado) {
     return (
       <ScrollView style={{ padding: 20, backgroundColor: '#121212' }}>
-        
-        {/* 🚀 IMPLEMENTAÇÃO 1: Botão Voltar na Tela de Detalhes */}
-        <View style={{ marginBottom: 20, marginTop: 20 }}>
-          <BackButton onPress={() => setTreinoSelecionado(null)} />
-          {/* O componente BackButton padrão que criamos usa router.back(), 
-              então o ideal é criar um botão customizado para o setTreinoSelecionado(null) 
-              OU modificar BackButton para aceitar uma prop onPress customizada. 
-              Neste caso, voltamos ao TouchableOpacity com estilo melhorado. 
-              Para simplicidade, usaremos o TouchableOpacity já existente com a função interna.
-          */}
-          <TouchableOpacity
-            onPress={() => setTreinoSelecionado(null)}
-            style={styles.backButtonDetail}
-          >
-             <Ionicons name="arrow-back" size={24} color="#fff" />
-             <Text style={styles.backTextDetail}> Voltar</Text>
-          </TouchableOpacity>
-        </View>
+
+        {/* BOTÃO VOLTAR (PNG) */}
+        <TouchableOpacity
+          onPress={() => setTreinoSelecionado(null)}
+          style={{ width: 40, height: 40, marginBottom: 20 }}
+        >
+          <Image
+            source={require('../../assets/images/backbutton.png')}
+            style={{ width: 40, height: 40, resizeMode: 'contain' }}
+          />
+        </TouchableOpacity>
 
         <Text style={[{ fontSize: 22, fontWeight: 'bold' }, textStyle]}>
           {treinoSelecionado.titulo}
@@ -167,7 +141,10 @@ export default function TreinosAnteriores() {
             <Text style={{ fontWeight: 'bold', color: '#fff' }}>
               {ex.exercise.name}
             </Text>
-            <Text style={{ color: '#fff' }}>Carga total: {ex.carga} kg</Text>
+
+            <Text style={{ color: '#fff' }}>
+              Carga total: {ex.carga} kg
+            </Text>
 
             <Text style={{ fontWeight: 'bold', marginTop: 6, color: '#fff' }}>
               Séries Detalhadas:
@@ -197,26 +174,30 @@ export default function TreinosAnteriores() {
             )}
           </View>
         ))}
+
       </ScrollView>
     );
   }
 
-  // --- TELA DE LISTA DE TREINOS ---
+  // ---------------------------
+  // TELA PRINCIPAL – LISTA
+  // ---------------------------
   return (
-    <View style={styles.container}>
-      
-      {/* 🚀 IMPLEMENTAÇÃO 2: Botão Voltar Absoluto na Lista (Para sair da tela) */}
-      <View style={styles.backButtonListWrapper}>
-         {/* Assumindo que você quer voltar da página de lista para a página anterior (home, tabs, etc.) */}
-         <BackButton /> 
-      </View>
-      
-      <Text style={styles.listTitle}>Meus Treinos Anteriores</Text>
+    <View style={{ flex: 1, backgroundColor: '#121212', paddingTop: 30 }}>
+
+      {/* BOTÃO VOLTAR DA TELA PRINCIPAL (PNG) */}
+      <TouchableOpacity
+        onPress={() => router.push('/(tabs)/treinos')}
+        style={{ width: 40, height: 40, marginLeft: 20, marginBottom: 20 }}
+      >
+        <Image
+          source={require('../../assets/images/backbutton.png')}
+          style={{ width: 40, height: 40, resizeMode: 'contain' }}
+        />
+      </TouchableOpacity>
 
       <FlatList
-        // Ajuste no paddingTop para que o conteúdo não fique escondido sob o botão Voltar
-        style={{ paddingHorizontal: 20 }} 
-        contentContainerStyle={{ paddingTop: 10 }} // Espaçamento entre o título e a lista
+        style={{ padding: 7 }}
         data={treinos}
         keyExtractor={item => item.id.toString()}
         renderItem={({ item }) => (
@@ -231,7 +212,7 @@ export default function TreinosAnteriores() {
               alignItems: 'center',
             }}
           >
-            {/* Botão para abrir treino */}
+            {/* Abrir treino */}
             <TouchableOpacity
               onPress={() => setTreinoSelecionado(item)}
               style={{ flex: 1 }}
@@ -244,9 +225,12 @@ export default function TreinosAnteriores() {
               </Text>
             </TouchableOpacity>
 
-            {/* Botão excluir */}
+            {/* Excluir */}
             <TouchableOpacity
-              onPress={() => handleDeleteTreino(item.id)}
+              onPress={() => {
+                console.log("Excluindo treino ID:", item.id);
+                handleDeleteTreino(item.id);
+              }}
               style={{
                 backgroundColor: '#ff4444',
                 paddingVertical: 6,
@@ -255,7 +239,9 @@ export default function TreinosAnteriores() {
                 marginLeft: 12,
               }}
             >
-              <Ionicons name="trash-outline" size={18} color="white" />
+              <Text style={{ color: 'white', fontWeight: 'bold' }}>
+                Excluir
+              </Text>
             </TouchableOpacity>
           </View>
         )}
@@ -263,39 +249,3 @@ export default function TreinosAnteriores() {
     </View>
   );
 }
-
-// --- ESTILOS ADICIONADOS ---
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#121212',
-        paddingTop: 50, // Adiciona espaço no topo
-    },
-    listTitle: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#fff',
-        marginBottom: 20,
-        paddingHorizontal: 20,
-        textAlign: 'center',
-    },
-    // Estilo para o botão Voltar da tela de LISTA (posicionamento absoluto)
-    backButtonListWrapper: {
-        position: 'absolute',
-        top: 50, // Ajuste a altura conforme necessário
-        left: 20,
-        zIndex: 10,
-    },
-    // Estilos customizados para o botão Voltar na tela de DETALHES
-    backButtonDetail: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 5,
-        marginBottom: 10,
-    },
-    backTextDetail: {
-        color: '#fff',
-        fontSize: 16,
-        marginLeft: 5,
-    }
-});

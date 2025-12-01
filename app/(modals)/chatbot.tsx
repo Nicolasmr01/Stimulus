@@ -1,7 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   FlatList,
+  Image,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -15,6 +17,7 @@ import { BASE_API_URL } from '../../utils/api';
 
 export default function ChatBot() {
   const { memoryToken } = useAuth();
+  const router = useRouter();
 
   const [messages, setMessages] = useState([
     { id: "1", from: "bot", text: "Oi! Me diga seu treino e eu organizo tudo certinho 😄" },
@@ -36,7 +39,6 @@ export default function ChatBot() {
     const texto = input.trim();
     setInput("");
 
-    // Mensagem temporária
     const loadingMsg = {
       id: (Date.now() + 1).toString(),
       from: "bot",
@@ -56,7 +58,6 @@ export default function ChatBot() {
 
       const data = await response.json();
 
-      // Remove a mensagem de carregando
       setMessages((prev) => prev.filter((m) => m.id !== loadingMsg.id));
 
       if (!response.ok || data.error) {
@@ -71,22 +72,18 @@ export default function ChatBot() {
         return;
       }
 
-      // ---------------------------------------
-      // FORMATADOR DE EXERCÍCIOS
-      // ---------------------------------------
       const formattedExercises = data.TreinoExercicio.map((te: any) => {
-  const nome = te.Exercise?.name ?? "Exercício desconhecido";
+        const nome = te.Exercise?.name ?? "Exercício desconhecido";
 
-  const detalhes =
-    te.Serie.length > 0
-      ? te.Serie.map((s: any) => `${s.carga}kg x ${s.reps}`).join(", ")
-      : "sem séries registradas";
+        const detalhes =
+          te.Serie.length > 0
+            ? te.Serie.map((s: any) => `${s.carga}kg x ${s.reps}`).join(", ")
+            : "sem séries registradas";
 
-  return `• ${nome} — ${detalhes}`;
-}).join("\n");
+        return `• ${nome} — ${detalhes}`;
+      }).join("\n");
 
-// MONTAR RESPOSTA BONITA
-const formatted = `
+      const formatted = `
 Título: ${data.titulo}
 Data: ${new Date(data.data).toLocaleDateString("pt-BR")}
 
@@ -119,6 +116,18 @@ ${formattedExercises}
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
+
+      {/* ⬅️ BOTÃO DE VOLTAR — NÃO MEXE EM NADA DO CHAT */}
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => router.back()}
+      >
+        <Image
+          source={require("../../assets/images/backbutton.png")}
+          style={{ width: 28, height: 28 }}
+        />
+      </TouchableOpacity>
+
       <FlatList
         ref={listRef}
         data={messages}
@@ -158,6 +167,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#0a0a0a",
   },
+
+  backButton: {
+    position: "absolute",
+    top: 20,
+    left: 20,
+    zIndex: 999,
+  },
+
   message: {
     maxWidth: "80%",
     padding: 10,
@@ -182,7 +199,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#111",
     borderTopWidth: 1,
     borderTopColor: "#222",
-    paddingBottom: 50
+    paddingBottom: 50,
   },
   input: {
     flex: 1,

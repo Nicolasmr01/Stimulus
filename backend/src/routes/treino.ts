@@ -445,7 +445,8 @@ REGRAS IMPORTANTES:
 - “pull” → "Treino Pull"
 - Se não mencionar divisão → "Treino"
 - Use data atual no formato YYYY-MM-DD.
--Sempre que o usúario digitar A DATA EM YYYY-MM-DD, USE ELA
+- Sempre que o usúario digitar A DATA EM YYYY-MM-DD, USE ELA
+- Sempre que o usuário mencionar "reps", entenda como "repetições" e use esse valor para preencher o campo "reps" do exercício.
 
 Se o usuário informar descanso, humor, alimentação ou esforço:
 - O valor DEVE estar entre 0 e 10.
